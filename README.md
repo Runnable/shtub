@@ -313,3 +313,6 @@ ls # Prints 'four'
 
 Override the default behavior for the stub for the given call number by having
 it run the given command instead.
+
+## License
+MIT
