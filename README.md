@@ -88,7 +88,7 @@ simply return `0`. This method will also set a slew of methods that can be used
 to change the default behavior of the stub. See the `::` methods below for more
 information.
 
-#### stub::returns `<command> <output>`
+#### stub::returns `<command>` `<output>`
 
 - `<command>` - Name of the command to stub
 - `<output>` - Output the stub should pipe to `stdout` when called
@@ -101,7 +101,7 @@ cat 'neat' # Outputs: foobar
 Creates a stub for the given command that pipes the given output to `stdout`
 when the command is executed.
 
-#### stub:errors `<command> <output> [code=1]`
+#### stub:errors `<command>` `<output>` `[code=1]`
 
 - `<command>` - Name of the command to stub.
 - `<output>` - Output to pipe to `stderr`
@@ -117,7 +117,7 @@ neat # pipes 'not a command' to stderr, returns code 127
 Creates a stub for the given command that pipes the given output to `stderr` and
 returns the given status code.
 
-#### stub::exec `<command> <exec-command>`
+#### stub::exec `<command>` `<exec-command>`
 
 - `<exec-command>` - Command or function to execute when the stub is called
 
@@ -137,7 +137,7 @@ stub::exec 'echo' echo_stub
 Creates a stub for the given command that executes the given command string
 or function when the stub is called.
 
-### Stub commands (`::`)
+### Stub Commands
 Stub commands are special commands that are automatically added to the bash
 environment when creating a stub. They are also known as `::` commands because
 each one starts with the name of the stubbed command, followed by two colons,
@@ -190,7 +190,7 @@ yes::returns 'no way'
 ```
 Sets a stub to output the given string to `stdout` and return a `0` status code.
 
-#### ::errors `<output> [code=1]`
+#### ::errors `<output>` `[code=1]`
 
 - `<output>` - Output to pipe to `stderr` when the command is run
 - `[code=1]` - Optional status code for the stub (defaults to `1`)
@@ -217,7 +217,7 @@ pwd::exec pwd_stub
 
 Sets a stub to execute the given command or function when it is called.
 
-#### ::called_with `<arg1> [arg2 ...]`
+#### ::called_with `<arg1>` `[arg2 ...]`
 - `<arg1> [arg2 ...]` - Arguments with which the stub should have been called.
 
 ```bash
@@ -295,7 +295,7 @@ ls::called_thrice # Return 1
 
 Asserts that the stub was called exactly three times.
 
-#### ::on_call `<call-number> <exec-command>`
+#### ::on_call `<call-number>` `<exec-command>`
 
 - `<call-number>` - The number of the call to override
 - `<exec-command>` - Command to execute on the given call number
