@@ -7,6 +7,53 @@ in a bash environment. A stub acts as a "faux" command which override the
 default behavior of a command and allows the programmer to set specific behaviors
 (such as output to `stdout` or `stderr`, return codes, etc.).
 
+## Example: using `shtub` with `shpec`
+```bash
+#!/bin/bash
+source "./shtub.sh"
+
+# Testing a custom exponential backoff function that executes commands
+# until they succeed...
+describe 'util/backoff'
+  # before
+    # Create a testing stub action that will fail on the first and second call,
+    # then finally succeed on the third call
+    stub::errors 'action' 'failed'
+    action::on_call 3 true
+
+    # Create a secondary stub action that fails further down the line
+    stub::errors 'action2' 'failed'
+    action::on_call 5 true
+
+    # Stub the `sleep` command so we can ensure it is being called
+    stub 'sleep'
+  # end
+
+  it 'should sleep between tries'
+    backoff action
+    assert sleep::called_twice
+  end
+
+  it 'should exponentially back-off on failure'
+    # Reset the action and sleep stubs so we can start fresh
+    action::reset
+    sleep::reset
+
+    # Perform the test
+    backoff action
+    assert sleep::called_with 2
+    backoff action2
+    assert sleep::called_with 8
+  end
+
+  # after
+    # Finally, after done testing restore the stubs to their original state
+    action::restore
+    sleep::restore
+  # end
+end
+```
+
 ## Commands
 Stub is used via a series of commands that mutate a given bash environment by
 overriding existing commands and adding specialized functions that allow you to
@@ -27,7 +74,7 @@ In addition to overriding the default behavior of the command the setup commands
 will add a slew of special `::` methods that can then be called to get information
 about how a stub was used.
 
-##### stub `<command>`
+#### stub `<command>`
 
 - `<command>` - Name of the command to stub
 
@@ -41,7 +88,7 @@ simply return `0`. This method will also set a slew of methods that can be used
 to change the default behavior of the stub. See the `::` methods below for more
 information.
 
-##### stub::returns `<command> <output>`
+#### stub::returns `<command> <output>`
 
 - `<command>` - Name of the command to stub
 - `<output>` - Output the stub should pipe to `stdout` when called
@@ -54,7 +101,7 @@ cat 'neat' # Outputs: foobar
 Creates a stub for the given command that pipes the given output to `stdout`
 when the command is executed.
 
-##### stub:errors `<command> <output> [code=1]`
+#### stub:errors `<command> <output> [code=1]`
 
 - `<command>` - Name of the command to stub.
 - `<output>` - Output to pipe to `stderr`
@@ -70,7 +117,7 @@ neat # pipes 'not a command' to stderr, returns code 127
 Creates a stub for the given command that pipes the given output to `stderr` and
 returns the given status code.
 
-##### stub::exec `<command> <exec-command>`
+#### stub::exec `<command> <exec-command>`
 
 - `<exec-command>` - Command or function to execute when the stub is called
 
@@ -108,7 +155,7 @@ ls::restore
 The rest of this section details each of the special `::` commands that are
 available to a stub.
 
-##### ::restore
+#### ::restore
 ```bash
 # Create the stub
 stub 'echo'
@@ -122,7 +169,7 @@ echo 'Hi there' # Works as expected
 Restores a command to its original state. Effectively removes the stub and all
 special `::` commands from the bash environment.
 
-##### ::reset
+#### ::reset
 ```bash
 stub 'ps'
 ps
@@ -132,7 +179,7 @@ ps::reset # Call count is no 0, last call arguments are now empty
 
 Resets all internal call counts and argument lists associated with a stub.
 
-##### ::returns `<output>`
+#### ::returns `<output>`
 
 - `<output>` - Output to be piped to `stdout` by the command
 
@@ -143,7 +190,7 @@ yes::returns 'no way'
 ```
 Sets a stub to output the given string to `stdout` and return a `0` status code.
 
-##### ::errors `<output> [code=1]`
+#### ::errors `<output> [code=1]`
 
 - `<output>` - Output to pipe to `stderr` when the command is run
 - `[code=1]` - Optional status code for the stub (defaults to `1`)
@@ -157,7 +204,7 @@ Sets a stub to error by printing the given string to `stderr` and returning the
 given status code.
 
 
-##### ::exec `<exec-command>`
+#### ::exec `<exec-command>`
 - `<exec-command>` - Command or function to execute when the stub is called
 
 ```bash
@@ -170,7 +217,7 @@ pwd::exec pwd_stub
 
 Sets a stub to execute the given command or function when it is called.
 
-##### ::called_with `<arg1> [arg2 ...]`
+#### ::called_with `<arg1> [arg2 ...]`
 - `<arg1> [arg2 ...]` - Arguments with which the stub should have been called.
 
 ```bash
@@ -183,7 +230,7 @@ cd::called_with '/aewsom3' # Returns 1
 Asserts that a stub was called with the given arguments the last time it was
 executed.
 
-##### ::called `[number=1]`
+#### ::called `[number=1]`
 - `[number=1]` - Number of times to assert that the stub was called (defaults to
   1)
 
@@ -196,7 +243,7 @@ grep::called 14 # Returns 1
 
 Asserts that a stub was called the given number of times.
 
-##### ::not_called
+#### ::not_called
 
 ```bash
 stub 'cwd'
@@ -208,7 +255,7 @@ cwd::not_called # Returns 1
 
 Asserts that the stub was not called.
 
-##### ::called_once
+#### ::called_once
 
 ```bash
 stub 'cp'
@@ -221,7 +268,7 @@ cp::called_once # Returns 1
 
 Asserts that the stub was called exactly once.
 
-##### ::called_twice
+#### ::called_twice
 
 ```bash
 stub 'mv'
@@ -235,7 +282,7 @@ mv::called_twice # Returns 1
 
 Asserts that the stub was called exactly twice.
 
-##### ::called_thrice
+#### ::called_thrice
 
 ```bash
 stub 'ls'
@@ -247,3 +294,22 @@ ls::called_thrice # Return 1
 ```
 
 Asserts that the stub was called exactly three times.
+
+#### ::on_call <call-number> <exec-command>
+
+- `<call-number>` - The number of the call to override
+- `<exec-command>` - Command to execute on the given call number
+
+```bash
+stub::returns 'ls' 'default'
+ls::on_call 2 'echo two'
+ls::on_call 4 'echo four'
+
+ls # Prints 'default'
+ls # Prints 'two'
+ls # Prints 'default'
+ls # Prints 'four'
+```
+
+Override the default behavior for the stub for the given call number by having
+it run the given command instead.
