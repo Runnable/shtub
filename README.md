@@ -1,5 +1,5 @@
 # shtub
-Bash command stubs
+Bash command stubbing
 
 ## Overview
 shtub is a bash testing utility that allows for the creation of command stubs
