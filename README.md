@@ -101,7 +101,7 @@ cat 'neat' # Outputs: foobar
 Creates a stub for the given command that pipes the given output to `stdout`
 when the command is executed.
 
-#### stub:errors `<command>` `<output>` `[code=1]`
+#### stub::errors `<command>` `<output>` `[code=1]`
 
 - `<command>` - Name of the command to stub.
 - `<output>` - Output to pipe to `stderr`
