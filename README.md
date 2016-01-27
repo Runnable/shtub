@@ -108,7 +108,7 @@ ls::restore
 The rest of this section details each of the special `::` commands that are
 available to a stub.
 
-##### `<stub>`::restore
+##### ::restore
 ```bash
 # Create the stub
 stub 'echo'
@@ -122,7 +122,7 @@ echo 'Hi there' # Works as expected
 Restores a command to its original state. Effectively removes the stub and all
 special `::` commands from the bash environment.
 
-##### `<stub>`::reset
+##### ::reset
 ```bash
 stub 'ps'
 ps
@@ -132,7 +132,7 @@ ps::reset # Call count is no 0, last call arguments are now empty
 
 Resets all internal call counts and argument lists associated with a stub.
 
-##### `<stub>`::returns `<output>`
+##### ::returns `<output>`
 
 - `<output>` - Output to be piped to `stdout` by the command
 
@@ -143,7 +143,7 @@ yes::returns 'no way'
 ```
 Sets a stub to output the given string to `stdout` and return a `0` status code.
 
-##### `<stub>`::errors `<output> [code=1]`
+##### ::errors `<output> [code=1]`
 
 - `<output>` - Output to pipe to `stderr` when the command is run
 - `[code=1]` - Optional status code for the stub (defaults to `1`)
@@ -157,7 +157,7 @@ Sets a stub to error by printing the given string to `stderr` and returning the
 given status code.
 
 
-##### `<stub>`::exec `<exec-command>`
+##### ::exec `<exec-command>`
 - `<exec-command>` - Command or function to execute when the stub is called
 
 ```bash
@@ -170,7 +170,7 @@ pwd::exec pwd_stub
 
 Sets a stub to execute the given command or function when it is called.
 
-##### `<stub>`::called_with `<arg1> [arg2 ...]`
+##### ::called_with `<arg1> [arg2 ...]`
 - `<arg1> [arg2 ...]` - Arguments with which the stub should have been called.
 
 ```bash
@@ -183,7 +183,7 @@ cd::called_with '/aewsom3' # Returns 1
 Asserts that a stub was called with the given arguments the last time it was
 executed.
 
-##### `<stub>`::called `[number=1]`
+##### ::called `[number=1]`
 - `[number=1]` - Number of times to assert that the stub was called (defaults to
   1)
 
@@ -196,7 +196,7 @@ grep::called 14 # Returns 1
 
 Asserts that a stub was called the given number of times.
 
-##### `<stub>`::not_called
+##### ::not_called
 
 ```bash
 stub 'cwd'
@@ -208,7 +208,7 @@ cwd::not_called # Returns 1
 
 Asserts that the stub was not called.
 
-##### `<stub>`::called_once
+##### ::called_once
 
 ```bash
 stub 'cp'
@@ -221,7 +221,7 @@ cp::called_once # Returns 1
 
 Asserts that the stub was called exactly once.
 
-##### `<stub>`::called_twice
+##### ::called_twice
 
 ```bash
 stub 'mv'
@@ -235,7 +235,7 @@ mv::called_twice # Returns 1
 
 Asserts that the stub was called exactly twice.
 
-##### `<stub>`::called_thrice
+##### ::called_thrice
 
 ```bash
 stub 'ls'
