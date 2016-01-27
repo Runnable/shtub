@@ -295,7 +295,7 @@ ls::called_thrice # Return 1
 
 Asserts that the stub was called exactly three times.
 
-#### ::on_call <call-number> <exec-command>
+#### ::on_call `<call-number> <exec-command>`
 
 - `<call-number>` - The number of the call to override
 - `<exec-command>` - Command to execute on the given call number
