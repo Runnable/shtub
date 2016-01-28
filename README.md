@@ -54,6 +54,14 @@ describe 'util/backoff'
 end
 ```
 
+## Limitations
+The library has two major limitations:
+
+1. You cannot stub internal library functions, variables, and commands
+2. You cannot stub bash built-ins
+
+Without these two rules it would be incredibly easy to fork bomb yourself ;).
+
 ## Commands
 Stub is used via a series of commands that mutate a given bash environment by
 overriding existing commands and adding specialized functions that allow you to
@@ -217,6 +225,25 @@ pwd::exec pwd_stub
 
 Sets a stub to execute the given command or function when it is called.
 
+#### ::on_call `<call-number>` `<exec-command>`
+
+- `<call-number>` - The number of the call to override
+- `<exec-command>` - Command to execute on the given call number
+
+```bash
+stub::returns 'ls' 'default'
+ls::on_call 2 'echo two'
+ls::on_call 4 'echo four'
+
+ls # Prints 'default'
+ls # Prints 'two'
+ls # Prints 'default'
+ls # Prints 'four'
+```
+
+Override the default behavior for the stub for the given call number by having
+it run the given command instead.
+
 #### ::called_with `<arg1>` `[arg2 ...]`
 - `<arg1> [arg2 ...]` - Arguments with which the stub should have been called.
 
@@ -294,25 +321,6 @@ ls::called_thrice # Return 1
 ```
 
 Asserts that the stub was called exactly three times.
-
-#### ::on_call `<call-number>` `<exec-command>`
-
-- `<call-number>` - The number of the call to override
-- `<exec-command>` - Command to execute on the given call number
-
-```bash
-stub::returns 'ls' 'default'
-ls::on_call 2 'echo two'
-ls::on_call 4 'echo four'
-
-ls # Prints 'default'
-ls # Prints 'two'
-ls # Prints 'default'
-ls # Prints 'four'
-```
-
-Override the default behavior for the stub for the given call number by having
-it run the given command instead.
 
 ## License
 MIT
