@@ -39,12 +39,44 @@ describe '_stub::methods'
   end # returns
 
   describe 'errors'
+    # before
+      stub 'bad'
+    # end
+
     it 'should cause the stub to error with the given output'
-      stub 'wonky'
-      wonky::errors 'noo'
-      assert equal $(wonky 2>&1) 'noo'
-      wonky::restore
+      local message='noooo'
+      bad::errors "$message"
+      assert equal "$(bad 2>&1)" "$message"
     end
+
+    it 'should use the given error code'
+      local code=122
+      bad::errors 'nope' "$code"
+      bad &> /dev/null
+      assert equal "$?" "$code"
+    end
+
+    it 'should allow for empty stderr output'
+      bad::errors
+      assert equal "$(bad 2>&1)" ''
+    end
+
+    it 'should return an error code with empty output'
+      bad::errors
+      bad &> /dev/null
+      assert equal "$?" '1'
+    end
+
+    it 'should allow for empty output with a status code'
+      local code=111
+      bad::errors "$code"
+      bad &> /dev/null
+      assert equal "$?" "$code"
+    end
+
+    # after
+      bad::restore
+    # end
   end # errors
 
   describe 'exec'

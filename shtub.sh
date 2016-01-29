@@ -223,16 +223,28 @@ _stub::methods::returns() {
 # Sets a stub to error by printing the given string to stderr and returning the
 # given status code.
 # @param $1 name Name of the command to stub
-# @param $2 output Output to send to stderr
+# @param $2 [output] Output to send to stderr
 # @param $3 [code=1] Status code to return
 _stub::methods::errors() {
   local name="$1"
-  local output="${@:2:$#-2}"
-  local code="${@:$#}"
+  local output
+  local code
 
-  if ! [ "$code" -eq "$code" ] 2> /dev/null; then
-    output="$output $code"
+  # Handle the optional parameters
+  if [ $# -lt 2 ]; then
+    output="$2"
     code=1
+    if [ "$output" -eq "$output" ] 2> /dev/null; then
+      code="$output"
+      output=''
+    fi
+  else
+    output="${@:2:$#-2}"
+    code="${@:$#}"
+    if ! [ "$code" -eq "$code" ] 2> /dev/null; then
+      output="$output $code"
+      code=1
+    fi
   fi
 
   _stub::data::set "$name" 'default_command' ''
