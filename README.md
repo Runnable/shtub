@@ -62,7 +62,7 @@ The library has two major limitations:
 
 Without these two rules it would be incredibly easy to fork bomb yourself ;).
 
-## Commands
+## API Reference
 Stub is used via a series of commands that mutate a given bash environment by
 overriding existing commands and adding specialized functions that allow you to
 manipulate their stubbed behavior.

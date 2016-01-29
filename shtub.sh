@@ -23,13 +23,11 @@ _stub_method_names="
 
 # Keep a direct path reference to functions used by the library itself (in
 # case a user needs to stub them during testing)
-alias _stub_echo=$(which echo)
-alias _stub_grep=$(which grep)
-alias _stub_sed=$(which sed)
-alias _stub_awk=$(which awk)
-alias _stub_bash=$(which bash)
-alias _stub_env=$(which env)
-alias _stub_cut=$(which cut)
+_stub_echo="$(which echo)"
+_stub_grep="$(which grep)"
+_stub_sed="$(which sed)"
+_stub_awk="$(which awk)"
+_stub_env=$(which env)
 
 ################################################################################
 # Core Methods
@@ -39,7 +37,7 @@ alias _stub_cut=$(which cut)
 # @param $1 name Name of the stub.
 _stub::data::prefix() {
   local name="$1"
-  _stub_echo "_stub_data_${name}"
+  $_stub_echo "_stub_data_${name}"
 }
 
 # Sets data for a stub.
@@ -63,7 +61,7 @@ _stub::data::get() {
   local key="$2"
   local prefix
   prefix=$(_stub::data::prefix "$name")
-  eval "_stub_echo \$${prefix}_${key}"
+  eval "$_stub_echo \$${prefix}_${key}"
 }
 
 # Deletes data for a stub.
@@ -85,10 +83,10 @@ _stub::data::clear() {
   prefix=$(_stub::data::prefix "$name")
   local all_variables
   all_variables=$(
-    _stub_env | \
-      _stub_grep "$prefix" | \
-      _stub_sed 's/=/ /' | \
-      _stub_awk '{print $1}'
+    $_stub_env | \
+      $_stub_grep "$prefix" | \
+      $_stub_sed 's/=/ /' | \
+      $_stub_awk '{print $1}'
   )
   for key in $all_variables; do
     eval "unset ${key}"
@@ -98,7 +96,6 @@ _stub::data::clear() {
 # Resets counts, argument lists, etc. associated with a stub of the given name.
 # Roughly this implements the "::reset" method. Abstracted here since it mutates
 # state associated with stubs.
-# TODO
 # @param $1 name Name of the stub.
 _stub::data::reset() {
   local name="$1"
@@ -108,26 +105,14 @@ _stub::data::reset() {
 
 # Initializes all data environment variables associated with a stub of the
 # given name.
-# TODO
 # @param $1 name Name of the stub.
 _stub::data::init() {
   local name="$1"
   _stub::data::reset "$name"
-  _stub::data::set "$name" 'type' 'basic'
   _stub::data::set "$name" 'default_stdout' ''
   _stub::data::set "$name" 'default_stderr' ''
   _stub::data::set "$name" 'default_status_code' 0
   _stub::data::set "$name" 'default_command' ''
-}
-
-# Removes all magic `::` methods that were created for the stub of the given
-# name.
-# @param $1 name Name of the stub to remove.
-_stub::remove_methods() {
-  local name="$1"
-  for method_name in $_stub_method_names; do
-    unset -f "${name}::${method_name}"
-  done
 }
 
 # Completely removes a stub with the given name from the environment.
@@ -135,7 +120,9 @@ _stub::remove_methods() {
 _stub::remove() {
   local name="$1"
   unset -f "$name"
-  _stub::remove_methods "$name"
+  for method_name in $_stub_method_names; do
+    unset -f "${name}::${method_name}"
+  done
   _stub::data::clear "$name"
 }
 
@@ -191,19 +178,19 @@ _stub::exec() {
     return $?
   elif (( $default_status_code > 0 )); then
     if [ -n "$default_stderr" ]; then
-      _stub_echo "$default_stderr" >&2
+      $_stub_echo "$default_stderr" >&2
     fi
     return $default_status_code
   else
     if [ -n "$default_stdout" ]; then
-      _stub_echo "$default_stdout"
+      $_stub_echo "$default_stdout"
     fi
     return 0
   fi
 }
 
 ################################################################################
-# Magic :: methods
+# Stub methods
 ################################################################################
 
 # Restores a command to its original state. Effectively removes the stub and all
@@ -287,7 +274,7 @@ _stub::methods::called_with() {
   local argv="${@:2}"
   local last_args
   last_args=$(_stub::data::get "$name" 'last_args')
-  [[ -n $(_stub_echo $last_args | _stub_grep "^$argv") ]]
+  [[ -n $($_stub_echo $last_args | $_stub_grep "^$argv") ]]
 }
 
 # Asserts that a stub was called the given number of times.
@@ -357,15 +344,15 @@ _stub::methods::called_thrice() {
 stub() {
   local name="$1"
 
-  if [[ -n $(_stub_echo "$name" | _stub_grep '^_stub') ]]; then
-    _stub_echo "[ERROR] shtub: Cannot stub command '$name'," \
+  if [[ -n $($_stub_echo "$name" | $_stub_grep '^_stub') ]]; then
+    $_stub_echo "[ERROR] shtub: Cannot stub command '$name'," \
       "internal library methods cannot be stubbed" >&2
     return 1
   fi
 
   local blacklist="local if do done fi eval source return eval"
-  if [[ -n $(_stub_echo $blacklist | _stub_grep "$name") ]]; then
-    _stub_echo "[ERROR] shtub: Cannot stub command '$name'," \
+  if [[ -n $($_stub_echo $blacklist | $_stub_grep "$name") ]]; then
+    $_stub_echo "[ERROR] shtub: Cannot stub command '$name'," \
       "bash built-ins cannot be stubbed" >&2
     return 1
   fi
@@ -373,16 +360,7 @@ stub() {
   eval "
     _stub::methods::restore '${name}'
     ${name}() {
-      local args=''
-      local whitespace=\"[[:space:]]\"
-      for i in \$@; do
-        if [[ \$i =~ \$whitespace ]]; then
-          args+=' '
-        else
-          args+="'\$i' "
-        fi
-      done
-      _stub::exec '${name}' \$args
+      _stub::exec '${name}' \$@
     }
     _stub::data::init '${name}'
     _stub::set_all_methods '${name}'
