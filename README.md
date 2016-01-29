@@ -7,12 +7,18 @@ in a bash environment. A stub acts as a "faux" command which override the
 default behavior of a command and allows the programmer to set specific behaviors
 (such as output to `stdout` or `stderr`, return codes, etc.).
 
+## Installation
+To install shtub in the current directory, run:
+```bash
+curl -L https://raw.github.com/runnable/shtub/master/shtub.sh > ./shtub.sh
+```
+
 ## Example: using `shtub` with `shpec`
 ```bash
 #!/bin/bash
 source "./shtub.sh"
 
-# Testing a custom exponential backoff function that executes commands
+# Testing a custom exponential back off function that executes commands
 # until they succeed...
 describe 'util/backoff'
   # before
