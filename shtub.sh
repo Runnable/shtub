@@ -141,8 +141,9 @@ _stub::set_all_methods() {
 
 # Asserts that the last command passed
 _stub::assert() {
+  local last_code="$?"
   if [ -n "$(type -t assert)" ] && [ "$(type -t assert)" = 'function' ]; then
-    assert equal "$?" '0'
+    assert equal "$last_code" '0'
   fi
 }
 
