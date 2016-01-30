@@ -3,6 +3,11 @@
 source './shtub.sh'
 
 describe '_stub::methods'
+  # before
+    unset -f _stub::assert
+    _stub::assert() { return $?; }
+  # end
+
   describe 'restore'
     it 'should restore the original command'
       stub 'echo'
