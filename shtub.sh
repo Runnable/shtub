@@ -398,7 +398,7 @@ stub() {
 # @param $2 output Output the stub should pipe to stdout when called.
 stub::returns() {
   local name="$1"
-  local output="$2"
+  local output="${@:2}"
   stub "$name"
   eval "${name}::returns '$output'"
 }
