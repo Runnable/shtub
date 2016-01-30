@@ -1,7 +1,7 @@
 # shtub
 Bash command stubbing
 
-[![travis]](https://travis-ci.org/Runnable/shtub)
+[![Build Status](https://travis-ci.org/Runnable/shtub.svg?branch=master)](https://travis-ci.org/Runnable/shtub)
 
 ## Overview
 shtub is a bash testing utility that allows for the creation of command stubs
