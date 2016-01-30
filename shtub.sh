@@ -139,6 +139,13 @@ _stub::set_all_methods() {
   done
 }
 
+# Asserts that the last command passed
+_stub::assert() {
+  if [ -n "$(type -t assert)" ] && [ "$(type -t assert)" = 'function' ]; then
+    assert equal "$?" '0'
+  fi
+}
+
 # Executes a stubbed command.
 # @param $1     name Name of the stubbed command.
 # @param $2...  argv Arguments passed to the stub when executed.
@@ -213,7 +220,7 @@ _stub::methods::reset() {
 # @param $2 output Output for the command
 _stub::methods::returns() {
   local name="$1"
-  local output="$2"
+  local output="${@:2}"
   _stub::data::set "$name" 'default_command' ''
   _stub::data::set "$name" 'default_stderr' ''
   _stub::data::set "$name" 'default_status_code' 0
@@ -287,6 +294,7 @@ _stub::methods::called_with() {
   local last_args
   last_args=$(_stub::data::get "$name" 'last_args')
   [[ -n $($_stub_echo $last_args | $_stub_grep "^$argv") ]]
+  _stub::assert
 }
 
 # Asserts that a stub was called the given number of times.
@@ -302,6 +310,7 @@ _stub::methods::called() {
   else
     (( $call_count > 0 ))
   fi
+  _stub::assert
 }
 
 # Asserts that the stub was not called.
@@ -312,6 +321,7 @@ _stub::methods::not_called() {
   local call_count
   call_count=$(_stub::data::get "$name" 'call_count')
   (( $call_count == 0 ))
+  _stub::assert
 }
 
 # Asserts that the stub was called exactly once.
@@ -322,6 +332,7 @@ _stub::methods::called_once() {
   local call_count
   call_count=$(_stub::data::get "$name" 'call_count')
   (( $call_count == 1 ))
+  _stub::assert
 }
 
 # Asserts that the stub was called exactly twice.
@@ -332,6 +343,7 @@ _stub::methods::called_twice() {
   local call_count
   call_count=$(_stub::data::get "$name" 'call_count')
   (( $call_count == 2 ))
+  _stub::assert
 }
 
 # Asserts that the stub was called exactly three times.
@@ -342,6 +354,7 @@ _stub::methods::called_thrice() {
   local call_count
   call_count=$(_stub::data::get "$name" 'call_count')
   (( $call_count == 3 ))
+  _stub::assert
 }
 
 ################################################################################
@@ -385,7 +398,7 @@ stub() {
 # @param $2 output Output the stub should pipe to stdout when called.
 stub::returns() {
   local name="$1"
-  local output="$2"
+  local output="${@:2}"
   stub "$name"
   eval "${name}::returns '$output'"
 }

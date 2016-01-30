@@ -23,7 +23,7 @@ end # stub
 
 describe 'stub::returns'
   # before
-    local output='grill'
+    local output='grill be dope yo'
     stub::returns 'dayum' "$output"
   # end
 

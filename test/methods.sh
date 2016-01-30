@@ -3,6 +3,11 @@
 source './shtub.sh'
 
 describe '_stub::methods'
+  # before
+    unset -f _stub::assert
+    _stub::assert() { return $?; }
+  # end
+
   describe 'restore'
     it 'should restore the original command'
       stub 'echo'
@@ -31,9 +36,10 @@ describe '_stub::methods'
 
   describe 'returns'
     it 'should cause the stub to echo the given string'
+      local output='gtfo and rtfm noob'
       stub 'ls'
-      ls::returns 'gtfo'
-      assert equal $(ls) 'gtfo'
+      ls::returns "$output"
+      assert equal "$(ls)" "$output"
       ls::restore
     end
   end # returns
