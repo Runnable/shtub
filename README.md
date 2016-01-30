@@ -1,6 +1,8 @@
 # shtub
 Bash command stubbing
 
+[![Build Status](https://travis-ci.org/Runnable/shtub.svg?branch=master)](https://travis-ci.org/Runnable/shtub)
+
 ## Overview
 shtub is a bash testing utility that allows for the creation of command stubs
 in a bash environment. A stub acts as a "faux" command which override the
