@@ -26,6 +26,13 @@ describe '_stub'
         local result=$(_stub::data::prefix "$name")
         assert equal "$expected" "$result"
       end
+
+      it 'should replace colons with underscores'
+        local name='some::cmd'
+        local expected="_stub_data_some__cmd"
+        local result=$(_stub::data::prefix "$name")
+        assert equal "$expected" "$result"
+      end
     end # prefix
 
     describe 'set'

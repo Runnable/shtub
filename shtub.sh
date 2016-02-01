@@ -36,7 +36,7 @@ _stub_env=$(which env)
 # Gets the prefix for data variables associated with a stub of the given name
 # @param $1 name Name of the stub.
 _stub::data::prefix() {
-  local name="$1"
+  local name=$($_stub_echo "$1" | $_stub_sed 's/:/_/g')
   $_stub_echo "_stub_data_${name}"
 }
 
