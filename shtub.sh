@@ -145,6 +145,7 @@ _stub::assert() {
   if [ -n "$(type -t assert)" ] && [ "$(type -t assert)" = 'function' ]; then
     assert equal "$last_code" '0'
   fi
+  return $last_code
 }
 
 # Executes a stubbed command.
