@@ -30,6 +30,7 @@ _stub_awk="$(which awk)"
 _stub_env=$(which env)
 _stub_cat=$(which cat)
 _stub_cut=$(which cut)
+_stub_touch=$(which touch)
 
 ################################################################################
 # Core Methods
@@ -57,13 +58,13 @@ _stub::data::set() {
   local key="$2"
   local value="${@:3}"
   local prefix=$(_stub::data::prefix "$name" "$key")
-  local line="${prefix}=$value"
+
+  $_stub_touch .stubdata
   if [ -n "$($_stub_grep "${prefix}" .stubdata)" ]; then
-    local replaced=$($_stub_sed "s/${prefix}=.*/$line/" .stubdata)
-    $_stub_echo "$replaced" > .stubdata
-  else
-    $_stub_echo "$line" >> .stubdata
+    local results=$(sed -n "/^$prefix/!p" .stubdata)
+    $_stub_echo "$results" > .stubdata
   fi
+  $_stub_echo "${prefix}=$value" >> .stubdata
 }
 
 # Gets (echos) data for a stub.
@@ -73,7 +74,7 @@ _stub::data::get() {
   local name="$1"
   local key="$2"
   local prefix=$(_stub::data::prefix "$name" "$key")
-  $_stub_grep "$prefix" .stubdata | $_stub_cut -d '=' -f 2
+  $_stub_grep "$prefix=" .stubdata | $_stub_cut -d '=' -f 2
 }
 
 # Deletes data for a stub.
@@ -192,7 +193,7 @@ _stub::exec() {
   if [ -n "$default_command" ]; then
     ${default_command} ${argv}
     return $?
-  elif (( $default_status_code > 0 )); then
+  elif [ "$default_status_code" -gt "0" ]; then
     if [ -n "$default_stderr" ]; then
       $_stub_echo "$default_stderr" >&2
     fi
