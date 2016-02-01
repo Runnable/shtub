@@ -42,6 +42,14 @@ describe '_stub'
         local was_set=$(grep '{name}.key=value' .stubdata | wc -l | sed 's/ //g')
         assert equal "$was_set" "1"
       end
+
+      it 'should allow slashes in the value'
+        echo '' > .stubdata
+        _stub::data::set 'name' 'key' 'initial'
+        _stub::data::set 'name' 'key' '/this/path/should/work'
+        local was_set=$(grep '/this/path/should/work' .stubdata | wc -l | sed 's/ //g')
+        assert equal "$was_set" "1"
+      end
     end # set
 
     describe 'get'
