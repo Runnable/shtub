@@ -22,49 +22,40 @@ describe '_stub'
     describe 'prefix'
       it 'should echo the correct stub data prefix'
         local name='some_stubbed_command'
-        local expected="_stub_data_${name}"
+        local expected="{${name}}"
         local result=$(_stub::data::prefix "$name")
         assert equal "$expected" "$result"
+      end
+
+      it 'should echo the correct key value prefix'
+        local name='stubbed'
+        local key='keyname'
+        local expected="{${name}}.${key}"
+        assert equal "$expected" "$(_stub::data::prefix $name $key)"
       end
     end # prefix
 
     describe 'set'
-      it 'should set the given data in the environment'
-        local name='stub_name'
-        local key='variable_key'
-        local value='variable_value'
-        local prefix=$(_stub::data::prefix "$name")
-        _stub::data::set "$name" "$key" "$value"
-        local variable_name="${prefix}_${key}"
-        local result=$(eval "echo \$${variable_name}")
-        assert equal "$value" "$result"
-        eval "unset \$${variable_name}"
+      it 'should set the value for the given key'
+        echo '' > .stubdata
+        _stub::data::set 'name' 'key' 'value'
+        local was_set=$(grep '{name}.key=value' .stubdata | wc -l | sed 's/ //g')
+        assert equal "$was_set" "1"
       end
     end # set
 
     describe 'get'
       it 'should return the requested information'
-        local name='stub_name'
-        local key='some_key'
-        local value='wowza'
-        _stub::data::set "$name" "$key" "$value"
-        local result=$(_stub::data::get "$name" "$key")
-        assert equal "$value" "$result"
-        local variable_name="$(_stub::data::prefix "$name")_${key}"
-        eval "unset \$${variable_name}"
+        echo '{name}.key=1234' > .stubdata
+        assert equal "1234" "$(_stub::data::get 'name' 'key')"
       end
     end # get
 
     describe 'delete'
       it 'should delete the given key from the environment'
-        local name='madbeatz'
-        local key='rappers'
-        local value='coolio'
-        local prefix=$(_stub::data::prefix "$name")
-        _stub::data::set "$name" "$key" "$value"
-        _stub::data::delete "$name" "$key"
-        local result=$(_stub::data::get "$name" "$key")
-        assert equal '' "$result"
+        echo '{name}.key=alpha' > .stubdata
+        _stub::data::delete 'name' 'key'
+        assert equal '' "$(_stub::data::get 'name' 'key')"
       end
     end # delete
 
@@ -105,12 +96,7 @@ describe '_stub'
       end
 
       # after
-        _stub::data::delete "$name" 'call_count'
-        _stub::data::delete "$name" 'last_args'
-        _stub::data::delete "$name" 'default_stdout'
-        _stub::data::delete "$name" 'default_stderr'
-        _stub::data::delete "$name" 'default_command'
-        _stub::data::delete "$name" 'default_status_code'
+        _stub::data::clear "$name"
       #
     end # init
 
@@ -136,31 +122,22 @@ describe '_stub'
 
     describe 'clear'
       it 'should remove all variables associated with a stub'
-        local name='stub_name'
-        local prefix=$(_stub::data::prefix "$name")
-        eval "
-          export ${prefix}_a=10
-          export ${prefix}_b=20
-          export ${prefix}_c=30
-        "
-        _stub::data::clear "$name"
-        local a_val=$(_stub::data::get "$name" 'a')
-        local b_val=$(_stub::data::get "$name" 'b')
-        local c_val=$(_stub::data::get "$name" 'c')
-        [ -z "$a_val" ] && [ -z "$b_val" ] && [ -z "$c_val" ]
-        assert equal $? 0
+        echo '{name}.alpha=1' > .stubdata
+        echo '{name}.beta=2' >> .stubdata
+        echo '{other}.wow=neat' >> .stubdata
+        echo '{name}.gamma=3' >> .stubdata
+        echo '{name}.delta=4' >> .stubdata
+        _stub::data::clear 'name'
+        local expected='{other}.wow=neat'
+        assert equal "$expected" "$(cat .stubdata)"
       end
 
-      it 'should not delete variables not associated with a stub'
-        local name='stub_namezzz_yo'
-        local prefix=$(_stub::data::prefix "$name")
-        export _not_a_thing_yo=40
-        _stub::data::set "$name" "a" 12304
-        _stub::data::clear "$name"
-        local a_val=$(_stub::data::get "$name" 'a')
-        [ -z "$a_val" ] && [ -n "$_not_a_thing_yo" ]
-        assert equal $? 0
-        unset _not_a_thing_yo
+      it 'should clear all data when not given a name'
+        echo 'aaa' > .stubdata
+        echo 'aaa' >> .stubdata
+        echo 'aaa' >> .stubdata
+        _stub::data::clear
+        assert equal '' "$(cat .stubdata)"
       end
     end # clear
   end # data

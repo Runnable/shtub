@@ -28,6 +28,8 @@ _stub_grep="$(which grep)"
 _stub_sed="$(which sed)"
 _stub_awk="$(which awk)"
 _stub_env=$(which env)
+_stub_cat=$(which cat)
+_stub_cut=$(which cut)
 
 ################################################################################
 # Core Methods
@@ -35,9 +37,15 @@ _stub_env=$(which env)
 
 # Gets the prefix for data variables associated with a stub of the given name
 # @param $1 name Name of the stub.
+# @param $2 key Key for the data value.
 _stub::data::prefix() {
   local name="$1"
-  $_stub_echo "_stub_data_${name}"
+  local key="$2"
+  if [ -n "$key" ]; then
+    $_stub_echo "{${name}}.$key"
+  else
+    $_stub_echo "{${name}}"
+  fi
 }
 
 # Sets data for a stub.
@@ -47,10 +55,15 @@ _stub::data::prefix() {
 _stub::data::set() {
   local name="$1"
   local key="$2"
-  local value="$3"
-  local prefix
-  prefix=$(_stub::data::prefix "$name")
-  eval "export ${prefix}_${key}='$value'"
+  local value="${@:3}"
+  local prefix=$(_stub::data::prefix "$name" "$key")
+  local line="${prefix}=$value"
+  if [ -n "$($_stub_grep "${prefix}" .stubdata)" ]; then
+    local replaced=$($_stub_sed "s/${prefix}=.*/$line/" .stubdata)
+    $_stub_echo "$replaced" > .stubdata
+  else
+    $_stub_echo "$line" >> .stubdata
+  fi
 }
 
 # Gets (echos) data for a stub.
@@ -59,9 +72,8 @@ _stub::data::set() {
 _stub::data::get() {
   local name="$1"
   local key="$2"
-  local prefix
-  prefix=$(_stub::data::prefix "$name")
-  eval "$_stub_echo \$${prefix}_${key}"
+  local prefix=$(_stub::data::prefix "$name" "$key")
+  $_stub_grep "$prefix" .stubdata | $_stub_cut -d '=' -f 2
 }
 
 # Deletes data for a stub.
@@ -70,27 +82,22 @@ _stub::data::get() {
 _stub::data::delete() {
   local name="$1"
   local key="$2"
-  local prefix
-  prefix=$(_stub::data::prefix "$name")
-  eval "unset ${prefix}_${key}"
+  local prefix=$(_stub::data::prefix "$name" "$key")
+  local results=$(sed -n "/^$prefix/!p" .stubdata)
+  $_stub_echo "$results" > .stubdata
 }
 
-# Deletes all environment data associated with a stub of the given name.
-# @param $1 name Name of the stub.
+# Deletes data associated with a stub of the given name. If a name is not passed
+# then this will clear all stub related data.
+# @param $1 [name] Optional name for the stub.
 _stub::data::clear() {
   local name="$1"
-  local prefix
-  prefix=$(_stub::data::prefix "$name")
-  local all_variables
-  all_variables=$(
-    $_stub_env | \
-      $_stub_grep "$prefix" | \
-      $_stub_sed 's/=/ /' | \
-      $_stub_awk '{print $1}'
-  )
-  for key in $all_variables; do
-    eval "unset ${key}"
-  done
+  if [ -n "$name" ]; then
+    local results=$(sed -n "/^{$name}/!p" .stubdata)
+    $_stub_echo "$results" > .stubdata
+  else
+    $_stub_echo '' > .stubdata
+  fi
 }
 
 # Resets counts, argument lists, etc. associated with a stub of the given name.
@@ -145,6 +152,7 @@ _stub::assert() {
   if [ -n "$(type -t assert)" ] && [ "$(type -t assert)" = 'function' ]; then
     assert equal "$last_code" '0'
   fi
+  return $last_code
 }
 
 # Executes a stubbed command.
@@ -239,7 +247,7 @@ _stub::methods::errors() {
   local code
 
   # Handle the optional parameters
-  if [ $# -lt 2 ]; then
+  if [ $# -lt 3 ]; then
     output="$2"
     code=1
     if [ "$output" -eq "$output" ] 2> /dev/null; then
